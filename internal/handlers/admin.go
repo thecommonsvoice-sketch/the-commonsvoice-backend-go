@@ -274,7 +274,8 @@ func (h *AdminHandler) ChangeArticleStatus(w http.ResponseWriter, r *http.Reques
 	}
 
 	updates := map[string]any{"status": req.Status}
-	if req.Status == "PUBLISHED" {
+	switch req.Status {
+	case "PUBLISHED":
 		if req.PublishedAt != nil && *req.PublishedAt == "original" {
 			var article models.Article
 			h.DB.Select("\"createdAt\"").First(&article, "id = ?", articleId)
@@ -289,7 +290,7 @@ func (h *AdminHandler) ChangeArticleStatus(w http.ResponseWriter, r *http.Reques
 		} else {
 			updates["publishedAt"] = time.Now()
 		}
-	} else if req.Status == "DRAFT" {
+	case "DRAFT":
 		updates["publishedAt"] = nil
 	}
 
@@ -389,9 +390,10 @@ func (h *AdminHandler) BulkChangeArticleStatus(w http.ResponseWriter, r *http.Re
 		}
 	} else {
 		updates := map[string]any{"status": req.Status}
-		if req.Status == "PUBLISHED" {
+		switch req.Status {
+		case "PUBLISHED":
 			updates["publishedAt"] = time.Now()
-		} else if req.Status == "DRAFT" {
+		case "DRAFT":
 			updates["publishedAt"] = nil
 		}
 		h.DB.Model(&models.Article{}).Where("id IN ?", req.IDs).Updates(updates)

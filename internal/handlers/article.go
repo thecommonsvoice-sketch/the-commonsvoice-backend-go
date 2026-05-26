@@ -120,13 +120,14 @@ func (h *ArticleHandler) Create(w http.ResponseWriter, r *http.Request) {
 		Excerpt:         ifPtr(req.Excerpt),
 	}
 
-	if req.Status == "PUBLISHED" {
+	switch req.Status {
+	case "PUBLISHED":
 		article.Status = models.ArticleStatusPublished
 		now := time.Now()
 		article.PublishedAt = &now
-	} else if req.Status == "ARCHIVED" {
+	case "ARCHIVED":
 		article.Status = models.ArticleStatusArchived
-	} else {
+	default:
 		article.Status = models.ArticleStatusDraft
 	}
 
@@ -782,10 +783,11 @@ func (h *ArticleHandler) BulkUpdateStatus(w http.ResponseWriter, r *http.Request
 			Update("\"publishedAt\"", gorm.Expr("\"createdAt\""))
 	} else {
 		updates := map[string]any{"status": req.Status}
-		if req.Status == "PUBLISHED" {
+		switch req.Status {
+		case "PUBLISHED":
 			publishedAt := time.Now()
 			updates["publishedAt"] = publishedAt
-		} else if req.Status == "DRAFT" {
+		case "DRAFT":
 			updates["publishedAt"] = nil
 		}
 		h.DB.Model(&models.Article{}).Where("id IN ?", req.IDs).Updates(updates)
