@@ -416,7 +416,7 @@ func (h *ArticleHandler) List(w http.ResponseWriter, r *http.Request) {
 		db = db.Where("\"deletedAt\" IS NULL")
 
 		statusFilter := r.URL.Query().Get("status")
-		if user == nil {
+		if user == nil || user.Role == "USER" {
 			db = db.Where("status = ?", models.ArticleStatusPublished)
 		} else if statusFilter != "" {
 			db = db.Where("status = ?", statusFilter)
@@ -699,7 +699,16 @@ func (h *ArticleHandler) RoleCheck(w http.ResponseWriter, r *http.Request) {
 	slugOrId := r.PathValue("slugOrId")
 
 	var article models.Article
-	if err := h.DB.Unscoped().Where("id = ? OR slug = ?", slugOrId, slugOrId).First(&article).Error; err != nil {
+	if err := h.DB.Unscoped().
+		Preload("Author", func(db *gorm.DB) *gorm.DB {
+			return db.Select("id", "name", "email")
+		}).
+		Preload("Category", func(db *gorm.DB) *gorm.DB {
+			return db.Select("id", "name", "slug")
+		}).
+		Preload("Videos").
+		Where("id = ? OR slug = ?", slugOrId, slugOrId).
+		First(&article).Error; err != nil {
 		response.Error(w, http.StatusNotFound, "Article not found")
 		return
 	}
@@ -714,7 +723,10 @@ func (h *ArticleHandler) RoleCheck(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.JSON(w, http.StatusOK, map[string]any{"allowed": true})
+	response.JSON(w, http.StatusOK, map[string]any{
+		"allowed": true,
+		"article": article,
+	})
 }
 
 func (h *ArticleHandler) BulkDelete(w http.ResponseWriter, r *http.Request) {

@@ -36,17 +36,23 @@ func (h *AdminHandler) GetAllUsers(w http.ResponseWriter, r *http.Request) {
 	search := r.URL.Query().Get("search")
 	offset := (page - 1) * limit
 
-	db := h.DB.Model(&models.User{}).Select("id", "email", "name", "role", "\"isActive\"", "\"createdAt\"", "\"updatedAt\"")
+	countQuery := h.DB.Model(&models.User{})
 	if search != "" {
 		like := "%" + search + "%"
-		db = db.Where("name ILIKE ? OR email ILIKE ?", like, like)
+		countQuery = countQuery.Where("name ILIKE ? OR email ILIKE ?", like, like)
 	}
 
 	var total int64
-	db.Count(&total)
+	countQuery.Count(&total)
+
+	findQuery := h.DB.Model(&models.User{}).Select("id", "email", "name", "role", "\"isActive\"", "\"createdAt\"", "\"updatedAt\"")
+	if search != "" {
+		like := "%" + search + "%"
+		findQuery = findQuery.Where("name ILIKE ? OR email ILIKE ?", like, like)
+	}
 
 	var users []models.User
-	db.Offset(offset).Limit(limit).Order("\"createdAt\" DESC").Find(&users)
+	findQuery.Offset(offset).Limit(limit).Order("\"createdAt\" DESC").Find(&users)
 	if len(users) == 0 {
 		users = []models.User{}
 	}
@@ -208,16 +214,21 @@ func (h *AdminHandler) GetAllArticles(w http.ResponseWriter, r *http.Request) {
 	search := r.URL.Query().Get("search")
 	offset := (page - 1) * limit
 
-	db := h.DB.Model(&models.Article{}).Unscoped()
+	countQuery := h.DB.Model(&models.Article{}).Unscoped()
 	if search != "" {
-		db = db.Where("title ILIKE ?", "%"+search+"%")
+		countQuery = countQuery.Where("title ILIKE ?", "%"+search+"%")
 	}
 
 	var total int64
-	db.Count(&total)
+	countQuery.Count(&total)
+
+	findQuery := h.DB.Model(&models.Article{}).Unscoped()
+	if search != "" {
+		findQuery = findQuery.Where("title ILIKE ?", "%"+search+"%")
+	}
 
 	var articles []models.Article
-	db.Select("id", "title", "slug", "\"coverImage\"", "status", "\"authorId\"", "\"categoryId\"", "\"createdAt\"", "\"updatedAt\"", "\"publishedAt\"", "\"deletedAt\"").
+	findQuery.Select("id", "title", "slug", "\"coverImage\"", "status", "\"authorId\"", "\"categoryId\"", "\"createdAt\"", "\"updatedAt\"", "\"publishedAt\"", "\"deletedAt\"").
 		Preload("Author", func(db *gorm.DB) *gorm.DB {
 			return db.Select("id", "name", "email")
 		}).
