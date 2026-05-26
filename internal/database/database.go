@@ -8,7 +8,9 @@ import (
 )
 
 func Connect(dsn string) (*gorm.DB, error) {
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
+		PrepareStmt: false,
+	})
 
 	if err != nil {
 		return nil, err

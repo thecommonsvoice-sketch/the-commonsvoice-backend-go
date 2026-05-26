@@ -68,7 +68,7 @@ func (h *CommentHandler) ListByArticle(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var comments []models.Comment
-	h.DB.Where("article_id = ?", articleId).
+	h.DB.Where("\"articleId\" = ?", articleId).
 		Preload("User", func(db *gorm.DB) *gorm.DB {
 			return db.Select("id", "name", "email")
 		}).
@@ -77,7 +77,7 @@ func (h *CommentHandler) ListByArticle(w http.ResponseWriter, r *http.Request) {
 				return db.Select("id", "name", "email")
 			})
 		}).
-		Order("created_at DESC").
+		Order("\"createdAt\" DESC").
 		Find(&comments)
 
 	if len(comments) == 0 {
@@ -95,11 +95,11 @@ func (h *CommentHandler) ListByUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var comments []models.Comment
-	h.DB.Where("user_id = ?", userId).
+	h.DB.Where("\"userId\" = ?", userId).
 		Preload("Article", func(db *gorm.DB) *gorm.DB {
 			return db.Select("id", "title", "slug")
 		}).
-		Order("created_at DESC").
+		Order("\"createdAt\" DESC").
 		Find(&comments)
 
 	if len(comments) == 0 {
@@ -243,7 +243,7 @@ func (h *CommentHandler) Reply(w http.ResponseWriter, r *http.Request) {
 	h.DB.Preload("User", func(db *gorm.DB) *gorm.DB {
 		return db.Select("id", "name", "email")
 	}).Preload("Parent", func(db *gorm.DB) *gorm.DB {
-		return db.Select("id", "content", "user_id")
+		return db.Select("id", "content", "\"userId\"")
 	}).Preload("Parent.User", func(db *gorm.DB) *gorm.DB {
 		return db.Select("id", "name")
 	}).First(&reply, reply.ID)

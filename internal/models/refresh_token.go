@@ -10,11 +10,11 @@ import (
 type RefreshToken struct {
 	ID        string    `gorm:"primaryKey;type:text" json:"id"`
 	Jti       string    `gorm:"uniqueIndex;not null" json:"jti"`
-	UserID    string    `gorm:"index;not null" json:"userId"`
+	UserID    string    `gorm:"column:userId;index;not null" json:"userId"`
 	Revoked   bool      `gorm:"default:false" json:"revoked"`
-	ExpiresAt time.Time `gorm:"not null" json:"expiresAt"`
-	CreatedAt time.Time `json:"createdAt"`
-	UpdatedAt time.Time `json:"updatedAt"`
+	ExpiresAt time.Time `gorm:"column:expiresAt;not null" json:"expiresAt"`
+	CreatedAt time.Time `gorm:"column:createdAt" json:"createdAt"`
+	UpdatedAt time.Time `gorm:"column:updatedAt" json:"updatedAt"`
 
 	User User `gorm:"foreignKey:UserID" json:"user,omitempty"`
 }

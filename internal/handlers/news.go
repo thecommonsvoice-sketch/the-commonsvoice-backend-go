@@ -152,7 +152,7 @@ func (h *NewsHandler) fetchTheNewsAPI() (int, error) {
 
 func (h *NewsHandler) GetCachedNews(w http.ResponseWriter, r *http.Request) {
 	var news []models.LatestNews
-	result := h.DB.Order("created_at DESC").Limit(50).Find(&news)
+	result := h.DB.Order("\"createdAt\" DESC").Limit(50).Find(&news)
 	if result.Error != nil {
 		response.JSON(w, http.StatusInternalServerError, map[string]any{
 			"success": false, "error": result.Error.Error(),
@@ -276,7 +276,7 @@ func (h *NewsHandler) FetchNewsByCategory(w http.ResponseWriter, r *http.Request
 
 func (h *NewsHandler) fetchNewsByType(w http.ResponseWriter, newsType string) {
 	var news []models.LatestNews
-	result := h.DB.Where("type = ?", newsType).Order("created_at DESC").Limit(50).Find(&news)
+	result := h.DB.Where("type = ?", newsType).Order("\"createdAt\" DESC").Limit(50).Find(&news)
 	if result.Error != nil {
 		response.JSON(w, http.StatusInternalServerError, map[string]any{
 			"success": false, "error": result.Error.Error(),
@@ -329,7 +329,7 @@ func (h *NewsHandler) CleanupOldNews(w http.ResponseWriter, r *http.Request) {
 
 	cutoff := time.Now().AddDate(0, 0, -days)
 
-	result := h.DB.Where("created_at < ?", cutoff).Delete(&models.LatestNews{})
+	result := h.DB.Where("\"createdAt\" < ?", cutoff).Delete(&models.LatestNews{})
 
 	response.JSON(w, http.StatusOK, map[string]any{
 		"success":      true,

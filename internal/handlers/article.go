@@ -166,7 +166,7 @@ func (h *ArticleHandler) GetBySlugOrId(w http.ResponseWriter, r *http.Request) {
 	slugOrId := r.PathValue("slugOrId")
 
 	var article models.Article
-	if err := h.DB.Where("deleted_at IS NULL").Preload("Author", func(db *gorm.DB) *gorm.DB {
+	if err := h.DB.Where("\"deletedAt\" IS NULL").Preload("Author", func(db *gorm.DB) *gorm.DB {
 		return db.Select("id", "name", "email")
 	}).Preload("Category", func(db *gorm.DB) *gorm.DB {
 		return db.Select("id", "name", "slug")
@@ -256,7 +256,7 @@ func (h *ArticleHandler) Update(w http.ResponseWriter, r *http.Request) {
 
 	// Handle video replacement
 	if req.VideoURL != nil {
-		h.DB.Where("article_id = ?", existing.ID).Delete(&models.ArticleVideo{})
+		h.DB.Where("\"articleId\" = ?", existing.ID).Delete(&models.ArticleVideo{})
 		if *req.VideoURL != "" {
 			video := models.ArticleVideo{
 				ArticleID: existing.ID,
@@ -412,7 +412,7 @@ func (h *ArticleHandler) List(w http.ResponseWriter, r *http.Request) {
 	p, _ := services.NewPagination(r.URL.Query().Get("page"), r.URL.Query().Get("limit"))
 
 	filter := func(db *gorm.DB) *gorm.DB {
-		db = db.Where("deleted_at IS NULL")
+		db = db.Where("\"deletedAt\" IS NULL")
 
 		statusFilter := r.URL.Query().Get("status")
 		if user == nil {
@@ -427,21 +427,21 @@ func (h *ArticleHandler) List(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if author := r.URL.Query().Get("author"); author != "" {
-			db = db.Where("author_id IN (SELECT id FROM \"User\" WHERE name ILIKE ?)", "%"+author+"%")
+			db = db.Where("\"authorId\" IN (SELECT id FROM \"User\" WHERE name ILIKE ?)", "%"+author+"%")
 		}
 
 		if authorId := r.URL.Query().Get("authorId"); authorId != "" {
-			db = db.Where("author_id = ?", authorId)
+			db = db.Where("\"authorId\" = ?", authorId)
 		}
 
 		if startDate := r.URL.Query().Get("startDate"); startDate != "" {
 			if t, err := time.Parse("2006-01-02", startDate); err == nil {
-				db = db.Where("created_at >= ?", t)
+				db = db.Where("\"createdAt\" >= ?", t)
 			}
 		}
 		if endDate := r.URL.Query().Get("endDate"); endDate != "" {
 			if t, err := time.Parse("2006-01-02", endDate); err == nil {
-				db = db.Where("created_at <= ?", t.Add(24*time.Hour))
+				db = db.Where("\"createdAt\" <= ?", t.Add(24*time.Hour))
 			}
 		}
 
@@ -450,9 +450,9 @@ func (h *ArticleHandler) List(w http.ResponseWriter, r *http.Request) {
 			if err := h.DB.Where("slug = ? OR name = ?", category, category).First(&cat).Error; err == nil {
 				var childIDs []string
 				h.DB.Model(&models.Category{}).
-					Where("id = ? OR parent_id = ?", cat.ID, cat.ID).
+					Where("id = ? OR \"parentId\" = ?", cat.ID, cat.ID).
 					Pluck("id", &childIDs)
-				db = db.Where("category_id IN ?", childIDs)
+				db = db.Where("\"categoryId\" IN ?", childIDs)
 			}
 		}
 
@@ -466,7 +466,7 @@ func (h *ArticleHandler) List(w http.ResponseWriter, r *http.Request) {
 
 	var articles []models.Article
 	filter(h.DB.Model(&models.Article{})).
-		Select("id", "title", "slug", "content", "excerpt", "cover_image", "og_image", "status", "meta_title", "meta_description", "tags", "author_id", "category_id", "created_at", "updated_at", "published_at").
+		Select("id", "title", "slug", "content", "excerpt", "\"coverImage\"", "\"ogImage\"", "status", "\"metaTitle\"", "\"metaDescription\"", "tags", "\"authorId\"", "\"categoryId\"", "\"createdAt\"", "\"updatedAt\"", "\"publishedAt\"").
 		Preload("Author", func(db *gorm.DB) *gorm.DB {
 			return db.Select("id", "name")
 		}).
@@ -474,12 +474,12 @@ func (h *ArticleHandler) List(w http.ResponseWriter, r *http.Request) {
 			return db.Select("id", "name", "slug")
 		}).
 		Offset(p.OffSet).Limit(p.Limit).
-		Order("created_at DESC").
+		Order("\"createdAt\" DESC").
 		Find(&articles)
 
 	today := time.Now().Truncate(24 * time.Hour)
 	var updatedTodayCount int64
-	filter(h.DB.Model(&models.Article{})).Where("updated_at >= ?", today).Count(&updatedTodayCount)
+	filter(h.DB.Model(&models.Article{})).Where("\"updatedAt\" >= ?", today).Count(&updatedTodayCount)
 
 	var draftCount int64
 	filter(h.DB.Model(&models.Article{})).Where("status = ?", "DRAFT").Count(&draftCount)
@@ -491,7 +491,7 @@ func (h *ArticleHandler) List(w http.ResponseWriter, r *http.Request) {
 			articleIDs = append(articleIDs, a.ID)
 		}
 		var bookmarks []models.Bookmark
-		h.DB.Where("user_id = ? AND article_id IN ?", user.UserID, articleIDs).Find(&bookmarks)
+		h.DB.Where("\"userId\" = ? AND \"articleId\" IN ?", user.UserID, articleIDs).Find(&bookmarks)
 		for _, b := range bookmarks {
 			bookmarkSet[b.ArticleID] = true
 		}
@@ -567,8 +567,8 @@ func (h *ArticleHandler) Adjacent(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var nextArticle models.Article
-	if err := h.DB.Where("created_at > ? AND status = ? AND deleted_at IS NULL", article.CreatedAt, models.ArticleStatusPublished).
-		Order("created_at ASC").Limit(1).First(&nextArticle).Error; err == nil {
+	if err := h.DB.Where("\"createdAt\" > ? AND status = ? AND \"deletedAt\" IS NULL", article.CreatedAt, models.ArticleStatusPublished).
+		Order("\"createdAt\" ASC").Limit(1).First(&nextArticle).Error; err == nil {
 		next = &struct {
 			Slug  string `json:"slug"`
 			Title string `json:"title"`
@@ -576,8 +576,8 @@ func (h *ArticleHandler) Adjacent(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var prevArticle models.Article
-	if err := h.DB.Where("created_at < ? AND status = ? AND deleted_at IS NULL", article.CreatedAt, models.ArticleStatusPublished).
-		Order("created_at DESC").Limit(1).First(&prevArticle).Error; err == nil {
+	if err := h.DB.Where("\"createdAt\" < ? AND status = ? AND \"deletedAt\" IS NULL", article.CreatedAt, models.ArticleStatusPublished).
+		Order("\"createdAt\" DESC").Limit(1).First(&prevArticle).Error; err == nil {
 		prev = &struct {
 			Slug  string `json:"slug"`
 			Title string `json:"title"`
@@ -616,15 +616,15 @@ func (h *ArticleHandler) Related(w http.ResponseWriter, r *http.Request) {
 			conditions = append(conditions, "? = ANY(tags)")
 			args = append(args, tag)
 		}
-		where := fmt.Sprintf("id != ? AND status = ? AND deleted_at IS NULL AND (%s)", strings.Join(conditions, " OR "))
+		where := fmt.Sprintf("id != ? AND status = ? AND \"deletedAt\" IS NULL AND (%s)", strings.Join(conditions, " OR "))
 
 		var tagArticles []models.Article
 		h.DB.Where(where, args...).
-			Select("id", "title", "slug", "cover_image", "excerpt", "tags", "category_id", "author_id", "created_at", "published_at").
+			Select("id", "title", "slug", "\"coverImage\"", "excerpt", "tags", "\"categoryId\"", "\"authorId\"", "\"createdAt\"", "\"publishedAt\"").
 			Preload("Author", func(db *gorm.DB) *gorm.DB {
 				return db.Select("id", "name")
 			}).
-			Order("created_at DESC").
+			Order("\"createdAt\" DESC").
 			Limit(limit).
 			Find(&tagArticles)
 
@@ -642,12 +642,12 @@ func (h *ArticleHandler) Related(w http.ResponseWriter, r *http.Request) {
 	// Step 2: By same category
 	if len(result) < limit {
 		var catArticles []models.Article
-		h.DB.Where("category_id = ? AND id != ? AND status = ? AND deleted_at IS NULL", article.CategoryID, article.ID, models.ArticleStatusPublished).
-			Select("id", "title", "slug", "cover_image", "excerpt", "tags", "category_id", "author_id", "created_at", "published_at").
+		h.DB.Where("\"categoryId\" = ? AND id != ? AND status = ? AND \"deletedAt\" IS NULL", article.CategoryID, article.ID, models.ArticleStatusPublished).
+			Select("id", "title", "slug", "\"coverImage\"", "excerpt", "tags", "\"categoryId\"", "\"authorId\"", "\"createdAt\"", "\"publishedAt\"").
 			Preload("Author", func(db *gorm.DB) *gorm.DB {
 				return db.Select("id", "name")
 			}).
-			Order("created_at DESC").
+			Order("\"createdAt\" DESC").
 			Limit(limit - len(result)).
 			Find(&catArticles)
 
@@ -665,12 +665,12 @@ func (h *ArticleHandler) Related(w http.ResponseWriter, r *http.Request) {
 	// Step 3: Recent articles as fallback
 	if len(result) < limit {
 		var recentArticles []models.Article
-		h.DB.Where("id != ? AND status = ? AND deleted_at IS NULL", article.ID, models.ArticleStatusPublished).
-			Select("id", "title", "slug", "cover_image", "excerpt", "tags", "category_id", "author_id", "created_at", "published_at").
+		h.DB.Where("id != ? AND status = ? AND \"deletedAt\" IS NULL", article.ID, models.ArticleStatusPublished).
+			Select("id", "title", "slug", "\"coverImage\"", "excerpt", "tags", "\"categoryId\"", "\"authorId\"", "\"createdAt\"", "\"publishedAt\"").
 			Preload("Author", func(db *gorm.DB) *gorm.DB {
 				return db.Select("id", "name")
 			}).
-			Order("created_at DESC").
+			Order("\"createdAt\" DESC").
 			Limit(limit - len(result)).
 			Find(&recentArticles)
 
@@ -737,7 +737,7 @@ func (h *ArticleHandler) BulkDelete(w http.ResponseWriter, r *http.Request) {
 
 	if user.Role == "REPORTER" {
 		var count int64
-		h.DB.Model(&models.Article{}).Where("id IN ? AND author_id != ?", req.IDs, user.UserID).Count(&count)
+		h.DB.Model(&models.Article{}).Where("id IN ? AND \"authorId\" != ?", req.IDs, user.UserID).Count(&count)
 		if count > 0 {
 			response.Error(w, http.StatusForbidden, "You can only delete your own articles")
 			return
@@ -745,7 +745,7 @@ func (h *ArticleHandler) BulkDelete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	now := time.Now()
-	result := h.DB.Model(&models.Article{}).Where("id IN ?", req.IDs).Update("deleted_at", now)
+	result := h.DB.Model(&models.Article{}).Where("id IN ?", req.IDs).Update("\"deletedAt\"", now)
 	if result.Error != nil {
 		response.Error(w, http.StatusInternalServerError, "Failed to bulk delete articles")
 		return
@@ -779,14 +779,14 @@ func (h *ArticleHandler) BulkUpdateStatus(w http.ResponseWriter, r *http.Request
 
 	if req.Status == "PUBLISHED" && req.PublishedAt != nil && *req.PublishedAt == "original" {
 		h.DB.Model(&models.Article{}).Where("id IN ?", req.IDs).
-			Update("published_at", gorm.Expr("created_at"))
+			Update("\"publishedAt\"", gorm.Expr("\"createdAt\""))
 	} else {
 		updates := map[string]any{"status": req.Status}
 		if req.Status == "PUBLISHED" {
 			publishedAt := time.Now()
-			updates["published_at"] = publishedAt
+			updates["publishedAt"] = publishedAt
 		} else if req.Status == "DRAFT" {
-			updates["published_at"] = nil
+			updates["publishedAt"] = nil
 		}
 		h.DB.Model(&models.Article{}).Where("id IN ?", req.IDs).Updates(updates)
 	}

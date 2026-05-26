@@ -36,7 +36,7 @@ func (h *AdminHandler) GetAllUsers(w http.ResponseWriter, r *http.Request) {
 	search := r.URL.Query().Get("search")
 	offset := (page - 1) * limit
 
-	db := h.DB.Model(&models.User{}).Select("id", "email", "name", "role", "is_active", "created_at", "updated_at")
+	db := h.DB.Model(&models.User{}).Select("id", "email", "name", "role", "\"isActive\"", "\"createdAt\"", "\"updatedAt\"")
 	if search != "" {
 		like := "%" + search + "%"
 		db = db.Where("name ILIKE ? OR email ILIKE ?", like, like)
@@ -46,7 +46,7 @@ func (h *AdminHandler) GetAllUsers(w http.ResponseWriter, r *http.Request) {
 	db.Count(&total)
 
 	var users []models.User
-	db.Offset(offset).Limit(limit).Order("created_at DESC").Find(&users)
+	db.Offset(offset).Limit(limit).Order("\"createdAt\" DESC").Find(&users)
 	if len(users) == 0 {
 		users = []models.User{}
 	}
@@ -217,14 +217,14 @@ func (h *AdminHandler) GetAllArticles(w http.ResponseWriter, r *http.Request) {
 	db.Count(&total)
 
 	var articles []models.Article
-	db.Select("id", "title", "slug", "cover_image", "status", "author_id", "category_id", "created_at", "updated_at", "published_at", "deleted_at").
+	db.Select("id", "title", "slug", "\"coverImage\"", "status", "\"authorId\"", "\"categoryId\"", "\"createdAt\"", "\"updatedAt\"", "\"publishedAt\"", "\"deletedAt\"").
 		Preload("Author", func(db *gorm.DB) *gorm.DB {
 			return db.Select("id", "name", "email")
 		}).
 		Preload("Category", func(db *gorm.DB) *gorm.DB {
 			return db.Select("id", "name", "slug")
 		}).
-		Offset(offset).Limit(limit).Order("created_at DESC").
+		Offset(offset).Limit(limit).Order("\"createdAt\" DESC").
 		Find(&articles)
 	if len(articles) == 0 {
 		articles = []models.Article{}
@@ -232,7 +232,7 @@ func (h *AdminHandler) GetAllArticles(w http.ResponseWriter, r *http.Request) {
 
 	today := time.Now().Truncate(24 * time.Hour)
 	var publishedTodayCount int64
-	h.DB.Model(&models.Article{}).Where("status = ? AND updated_at >= ?", models.ArticleStatusPublished, today).Count(&publishedTodayCount)
+	h.DB.Model(&models.Article{}).Where("status = ? AND \"updatedAt\" >= ?", models.ArticleStatusPublished, today).Count(&publishedTodayCount)
 
 	var draftsCount int64
 	h.DB.Model(&models.Article{}).Where("status = ?", models.ArticleStatusDraft).Count(&draftsCount)
@@ -277,20 +277,20 @@ func (h *AdminHandler) ChangeArticleStatus(w http.ResponseWriter, r *http.Reques
 	if req.Status == "PUBLISHED" {
 		if req.PublishedAt != nil && *req.PublishedAt == "original" {
 			var article models.Article
-			h.DB.Select("created_at").First(&article, "id = ?", articleId)
-			updates["published_at"] = article.CreatedAt
+			h.DB.Select("\"createdAt\"").First(&article, "id = ?", articleId)
+			updates["publishedAt"] = article.CreatedAt
 		} else if req.PublishedAt != nil {
 			t, err := time.Parse(time.RFC3339, *req.PublishedAt)
 			if err == nil {
-				updates["published_at"] = t
+				updates["publishedAt"] = t
 			} else {
-				updates["published_at"] = time.Now()
+				updates["publishedAt"] = time.Now()
 			}
 		} else {
-			updates["published_at"] = time.Now()
+			updates["publishedAt"] = time.Now()
 		}
 	} else if req.Status == "DRAFT" {
-		updates["published_at"] = nil
+		updates["publishedAt"] = nil
 	}
 
 	result := h.DB.Model(&models.Article{}).Where("id = ?", articleId).Updates(updates)
@@ -382,17 +382,17 @@ func (h *AdminHandler) BulkChangeArticleStatus(w http.ResponseWriter, r *http.Re
 	if req.Status == "PUBLISHED" && req.PublishedAt != nil && *req.PublishedAt == "original" {
 		for _, id := range req.IDs {
 			var article models.Article
-			h.DB.Select("id", "created_at").First(&article, "id = ?", id)
+			h.DB.Select("id", "\"createdAt\"").First(&article, "id = ?", id)
 			h.DB.Model(&models.Article{}).Where("id = ?", id).Updates(map[string]any{
-				"status": req.Status, "published_at": article.CreatedAt,
+				"status": req.Status, "publishedAt": article.CreatedAt,
 			})
 		}
 	} else {
 		updates := map[string]any{"status": req.Status}
 		if req.Status == "PUBLISHED" {
-			updates["published_at"] = time.Now()
+			updates["publishedAt"] = time.Now()
 		} else if req.Status == "DRAFT" {
-			updates["published_at"] = nil
+			updates["publishedAt"] = nil
 		}
 		h.DB.Model(&models.Article{}).Where("id IN ?", req.IDs).Updates(updates)
 	}
@@ -440,7 +440,7 @@ func (h *AdminHandler) BulkUpdateUsers(w http.ResponseWriter, r *http.Request) {
 		updates["role"] = *req.Role
 	}
 	if req.IsActive != nil {
-		updates["is_active"] = *req.IsActive
+		updates["isActive"] = *req.IsActive
 	}
 
 	if len(updates) == 0 || len(req.IDs) == 0 {

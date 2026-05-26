@@ -12,10 +12,10 @@ type Category struct {
 	Name        string    `gorm:"uniqueIndex;not null" json:"name"`
 	Slug        string    `gorm:"uniqueIndex;not null" json:"slug"`
 	Description string    `json:"description"`
-	IsActive    bool      `gorm:"default:true" json:"isActive"`
-	ParentID    *string   `gorm:"index" json:"parentId"`
-	CreatedAt   time.Time `json:"createdAt"`
-	UpdatedAt   time.Time `json:"updatedAt"`
+	IsActive    bool      `gorm:"column:isActive;default:true" json:"isActive"`
+	ParentID    *string   `gorm:"column:parentId;index" json:"parentId"`
+	CreatedAt   time.Time `gorm:"column:createdAt" json:"createdAt"`
+	UpdatedAt   time.Time `gorm:"column:updatedAt" json:"updatedAt"`
 
 	Parent   *Category  `gorm:"foreignKey:ParentID" json:"parent,omitempty"`
 	Children []Category `gorm:"foreignKey:ParentID" json:"children,omitempty"`

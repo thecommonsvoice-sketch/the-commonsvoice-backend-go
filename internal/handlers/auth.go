@@ -199,7 +199,7 @@ func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 
 	var record models.RefreshToken
 
-	if err := h.DB.Where("jti = ? AND user_id = ?", claims.ID, claims.UserID).First(&record).Error; err != nil {
+	if err := h.DB.Where("jti = ? AND \"userId\" = ?", claims.ID, claims.UserID).First(&record).Error; err != nil {
 		response.Error(w, http.StatusUnauthorized, "Refresh token not found")
 		return
 	}
@@ -237,7 +237,7 @@ func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 
 	if err == nil && cookie.Value != "" {
 		if claims, err := services.ValidateToken(cookie.Value,h.Cfg.JWTSecret); err == nil {
-			h.DB.Model(&models.RefreshToken{}).Where("jti = ? AND user_id = ?", claims.ID, claims.UserID).Update("revoked", true)
+			h.DB.Model(&models.RefreshToken{}).Where("jti = ? AND \"userId\" = ?", claims.ID, claims.UserID).Update("revoked", true)
 		}
 	}
 

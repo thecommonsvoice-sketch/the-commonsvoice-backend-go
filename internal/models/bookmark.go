@@ -9,9 +9,9 @@ import (
 
 type Bookmark struct {
 	ID        string    `gorm:"primaryKey;type:text" json:"id"`
-	UserID    string    `gorm:"index;uniqueIndex:idx_user_article;not null" json:"userId"`
-	ArticleID string    `gorm:"index;uniqueIndex:idx_user_article;not null" json:"articleId"`
-	CreatedAt time.Time `json:"createdAt"`
+	UserID    string    `gorm:"column:userId;index;uniqueIndex:idx_user_article;not null" json:"userId"`
+	ArticleID string    `gorm:"column:articleId;index;uniqueIndex:idx_user_article;not null" json:"articleId"`
+	CreatedAt time.Time `gorm:"column:createdAt" json:"createdAt"`
 
 	User    User    `gorm:"foreignKey:UserID" json:"user,omitempty"`
 	Article Article `gorm:"foreignKey:ArticleID" json:"article,omitempty"`

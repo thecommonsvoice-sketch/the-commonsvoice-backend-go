@@ -108,10 +108,10 @@ func (h *CategoryHandler) Create(w http.ResponseWriter, r *http.Request) {
 
 func (h *CategoryHandler) List(w http.ResponseWriter, r *http.Request) {
 	var categories []models.Category
-	h.DB.Where("is_active = ? AND parent_id IS NULL", true).
+	h.DB.Where("\"isActive\" = ? AND \"parentId\" IS NULL", true).
 		Preload("Children", func(db *gorm.DB) *gorm.DB {
-			return db.Where("is_active = ?", true).
-				Select("id", "name", "slug", "is_active")
+			return db.Where("\"isActive\" = ?", true).
+				Select("id", "name", "slug", "\"isActive\"")
 		}).
 		Find(&categories)
 
@@ -152,13 +152,13 @@ func (h *CategoryHandler) List(w http.ResponseWriter, r *http.Request) {
 
 func (h *CategoryHandler) ListWithHierarchy(w http.ResponseWriter, r *http.Request) {
 	var categories []models.Category
-	h.DB.Where("is_active = ?", true).
+	h.DB.Where("\"isActive\" = ?", true).
 		Preload("Parent", func(db *gorm.DB) *gorm.DB {
 			return db.Select("id", "name", "slug")
 		}).
 		Preload("Children", func(db *gorm.DB) *gorm.DB {
-			return db.Where("is_active = ?", true).
-				Select("id", "name", "slug", "is_active")
+			return db.Where("\"isActive\" = ?", true).
+				Select("id", "name", "slug", "\"isActive\"")
 		}).
 		Order("name ASC").
 		Find(&categories)
@@ -179,7 +179,7 @@ func (h *CategoryHandler) ListWithHierarchy(w http.ResponseWriter, r *http.Reque
 
 func (h *CategoryHandler) ListInactive(w http.ResponseWriter, r *http.Request) {
 	var categories []models.Category
-	h.DB.Where("is_active = ?", false).
+	h.DB.Where("\"isActive\" = ?", false).
 		Preload("Parent", func(db *gorm.DB) *gorm.DB {
 			return db.Select("id", "name")
 		}).
@@ -254,7 +254,7 @@ func (h *CategoryHandler) Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if req.IsActive != nil {
-		updates["is_active"] = *req.IsActive
+		updates["isActive"] = *req.IsActive
 	}
 
 	if req.ParentID != nil {
@@ -265,7 +265,7 @@ func (h *CategoryHandler) Update(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		}
-		updates["parent_id"] = *req.ParentID
+		updates["parentId"] = *req.ParentID
 	}
 
 	if err := h.DB.Model(&category).Updates(updates).Error; err != nil {
@@ -292,7 +292,7 @@ func (h *CategoryHandler) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.DB.Model(&category).Update("is_active", false)
+	h.DB.Model(&category).Update("\"isActive\"", false)
 	response.JSON(w, http.StatusOK, map[string]string{"message": "Category deleted (soft) successfully"})
 }
 
@@ -309,7 +309,7 @@ func (h *CategoryHandler) Restore(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.DB.Model(&category).Update("is_active", true)
+	h.DB.Model(&category).Update("\"isActive\"", true)
 	response.JSON(w, http.StatusOK, map[string]string{"message": "Category restored successfully"})
 }
 
@@ -327,7 +327,7 @@ func (h *CategoryHandler) HardDelete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var articleCount int64
-	h.DB.Model(&models.Article{}).Where("category_id = ?", id).Count(&articleCount)
+	h.DB.Model(&models.Article{}).Where("\"categoryId\" = ?", id).Count(&articleCount)
 	if articleCount > 0 {
 		response.Error(w, http.StatusBadRequest,
 			"Cannot permanently delete: articles are assigned to this category. Reassign them first.")

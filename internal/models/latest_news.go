@@ -10,12 +10,12 @@ import (
 type LatestNews struct {
 	ID          string    `gorm:"primaryKey;type:text" json:"id"`
 	Title       string    `gorm:"not null" json:"title"`
-	PhotoURL    *string   `json:"photoUrl"`
+	PhotoURL    *string   `gorm:"column:photoUrl" json:"photoUrl"`
 	Link        *string   `json:"link"`
 	Type        *string   `json:"type"`
 	Description *string   `json:"description"`
-	CreatedAt   time.Time `json:"createdAt"`
-	UpdatedAt   time.Time `json:"updatedAt"`
+	CreatedAt   time.Time `gorm:"column:createdAt" json:"createdAt"`
+	UpdatedAt   time.Time `gorm:"column:updatedAt" json:"updatedAt"`
 }
 
 func (LatestNews) TableName() string { return "LatestNews" }

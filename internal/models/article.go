@@ -12,19 +12,19 @@ type Article struct {
 	Title           string         `gorm:"not null" json:"title"`
 	Slug            string         `gorm:"uniqueIndex;not null" json:"slug"`
 	Content         string         `gorm:"not null" json:"content"`
-	CoverImage      *string        `json:"coverImage"`
-	CategoryID      string         `gorm:"index;not null" json:"categoryId"`
-	AuthorID        string         `gorm:"index;not null" json:"authorId"`
+	CoverImage      *string        `gorm:"column:coverImage" json:"coverImage"`
+	CategoryID      string         `gorm:"column:categoryId;index;not null" json:"categoryId"`
+	AuthorID        string         `gorm:"column:authorId;index;not null" json:"authorId"`
 	Status          ArticleStatus  `gorm:"default:DRAFT" json:"status"`
-	PublishedAt     *time.Time     `json:"publishedAt"`
+	PublishedAt     *time.Time     `gorm:"column:publishedAt" json:"publishedAt"`
 	Excerpt         *string        `json:"excerpt"`
-	MetaTitle       *string        `json:"metaTitle"`
-	MetaDescription *string        `json:"metaDescription"`
-	OgImage         *string        `json:"ogImage"`
+	MetaTitle       *string        `gorm:"column:metaTitle" json:"metaTitle"`
+	MetaDescription *string        `gorm:"column:metaDescription" json:"metaDescription"`
+	OgImage         *string        `gorm:"column:ogImage" json:"ogImage"`
 	Tags            StringArray    `gorm:"type:text[]" json:"tags"`
-	DeletedAt       *time.Time     `json:"deletedAt"`
-	CreatedAt       time.Time      `json:"createdAt"`
-	UpdatedAt       time.Time      `json:"updatedAt"`
+	DeletedAt       *time.Time     `gorm:"column:deletedAt" json:"deletedAt"`
+	CreatedAt       time.Time      `gorm:"column:createdAt" json:"createdAt"`
+	UpdatedAt       time.Time      `gorm:"column:updatedAt" json:"updatedAt"`
 
 	Category Category      `gorm:"foreignKey:CategoryID" json:"category"`
 	Author   User          `gorm:"foreignKey:AuthorID" json:"author"`

@@ -9,13 +9,13 @@ import (
 
 type ArticleVideo struct {
 	ID          string    `gorm:"primaryKey;type:text" json:"id"`
-	ArticleID   string    `gorm:"index;not null" json:"articleId"`
+	ArticleID   string    `gorm:"column:articleId;index;not null" json:"articleId"`
 	Type        string    `gorm:"not null" json:"type"`
 	URL         string    `gorm:"not null" json:"url"`
 	Title       *string   `json:"title"`
 	Description *string   `json:"description"`
-	CreatedAt time.Time `json:"createdAt"`
-	UpdatedAt time.Time `json:"updatedAt"`
+	CreatedAt time.Time `gorm:"column:createdAt" json:"createdAt"`
+	UpdatedAt time.Time `gorm:"column:updatedAt" json:"updatedAt"`
 
 	Article Article `gorm:"foreignKey:ArticleID" json:"article,omitempty"`
 }

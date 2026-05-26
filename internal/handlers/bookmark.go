@@ -81,7 +81,7 @@ func (h *BookmarkHandler) Remove(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	result := h.DB.Where("user_id = ? AND article_id = ?", user.UserID, req.ArticleID).Delete(&models.Bookmark{})
+	result := h.DB.Where("\"userId\" = ? AND \"articleId\" = ?", user.UserID, req.ArticleID).Delete(&models.Bookmark{})
 	if result.Error != nil {
 		response.Error(w, http.StatusInternalServerError, "Failed to remove bookmark")
 		return
@@ -112,7 +112,7 @@ func (h *BookmarkHandler) Get(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var bookmark models.Bookmark
-	if err := h.DB.Where("user_id = ? AND article_id = ?", user.UserID, articleId).First(&bookmark).Error; err != nil {
+	if err := h.DB.Where("\"userId\" = ? AND \"articleId\" = ?", user.UserID, articleId).First(&bookmark).Error; err != nil {
 		response.JSON(w, http.StatusNotFound, map[string]any{
 			"success": false, "message": "Bookmark not found",
 		})
@@ -136,7 +136,7 @@ func (h *BookmarkHandler) List(w http.ResponseWriter, r *http.Request) {
 
 	p, _ := services.NewPagination(r.URL.Query().Get("page"), r.URL.Query().Get("limit"))
 
-	h.DB.Where("user_id = ?", user.UserID).
+	h.DB.Where("\"userId\" = ?", user.UserID).
 		Preload("Article", func(db *gorm.DB) *gorm.DB {
 			return db.Preload("Author", func(db *gorm.DB) *gorm.DB {
 				return db.Select("id", "name", "email")
@@ -144,7 +144,7 @@ func (h *BookmarkHandler) List(w http.ResponseWriter, r *http.Request) {
 		}).
 		Offset(p.OffSet).Limit(p.Limit).
 		Find(&bookmarks)
-	h.DB.Model(&models.Bookmark{}).Where("user_id = ?", user.UserID).Count(&total)
+	h.DB.Model(&models.Bookmark{}).Where("\"userId\" = ?", user.UserID).Count(&total)
 	p.Total = total
 	p.Calculate()
 
