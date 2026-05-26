@@ -2,6 +2,7 @@ package router
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/thecommonsvoice-sketch/the-commonsvoice-backend-go/internal/config"
 	"github.com/thecommonsvoice-sketch/the-commonsvoice-backend-go/internal/handlers"
@@ -24,7 +25,10 @@ func Register(mux *http.ServeMux, db *gorm.DB, cfg *config.Config) {
 	// Health
 
 	mux.HandleFunc("GET /health", func(w http.ResponseWriter, r *http.Request) {
-		response.JSON(w, 200, map[string]string{"status": "okay"})
+		response.JSON(w, 200, map[string]any{
+			"status":    "ok",
+			"timestamp": time.Now(),
+		})
 	})
 
 	// Auth
