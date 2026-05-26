@@ -1,0 +1,34 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+server
+
+# Test binary, built by `go test`
+*.test
+
+# Output of the go coverage tool, generated when using -coverprofile
+*.out
+
+# Dependency directories (only needed if you use vendor)
+# vendor/
+
+# IDEs and editors
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Operating System Files
+.DS_Store
+Thumbs.db
+
+# Environment files
+.env
+.env.*
+!.env.example
