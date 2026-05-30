@@ -28,13 +28,13 @@ func NewAuthHandler(db *gorm.DB, cfg *config.Config) *AuthHandler {
 
 type loginRequest struct {
 	Email string `json:"email" validate:"required,email"`
-	Password string `json:"password" validate:"required,min=6,max=20"`
+	Password string `json:"password" validate:"required,min=6,max=30"`
 }
 
 type registerRequest struct {
 	Name     string `json:"name" validate:"required,min=2"`
 	Email    string `json:"email" validate:"required,email"`
-	Password string `json:"password" validate:"required,min=6,max=20"`
+	Password string `json:"password" validate:"required,min=6,max=30"`
 }
 
 func (h *AuthHandler) Register(w http.ResponseWriter, r * http.Request) {
