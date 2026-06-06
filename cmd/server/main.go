@@ -58,6 +58,12 @@ func main() {
 		}
 
 		logger.Info("migrations complete")
+
+		if err := database.EnsureIndexes(db); err != nil {
+			logger.Error("index creation failed", "error", err)
+			os.Exit(1)
+		}
+		logger.Info("indexes ensured")
 	}
 
 	psql, _ := db.DB()
