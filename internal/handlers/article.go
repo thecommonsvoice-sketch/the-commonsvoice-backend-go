@@ -467,7 +467,7 @@ func (h *ArticleHandler) List(w http.ResponseWriter, r *http.Request) {
 
 	var articles []models.Article
 	filter(h.DB.Model(&models.Article{})).
-		Select("id", "title", "slug", "content", "excerpt", "\"coverImage\"", "\"ogImage\"", "status", "\"metaTitle\"", "\"metaDescription\"", "tags", "\"authorId\"", "\"categoryId\"", "\"createdAt\"", "\"updatedAt\"", "\"publishedAt\"").
+		Select("id", "title", "slug", "excerpt", "\"coverImage\"", "\"ogImage\"", "status", "\"metaTitle\"", "\"metaDescription\"", "tags", "\"authorId\"", "\"categoryId\"", "\"createdAt\"", "\"updatedAt\"", "\"publishedAt\"").
 		Preload("Author", func(db *gorm.DB) *gorm.DB {
 			return db.Select("id", "name")
 		}).
