@@ -8,7 +8,7 @@ import (
 
 const (
 	AccessTokenMaxAge  = 24 * time.Hour
-	RefreshTokenMaxAge = 7 * 24 * time.Hour
+	RefreshTokenMaxAge = 30 * 24 * time.Hour
 )
 
 // isProd returns true when NODE_ENV is "production".

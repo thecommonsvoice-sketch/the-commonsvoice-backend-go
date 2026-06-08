@@ -23,7 +23,7 @@ type AuthClaims struct {
 
 const (
 	accessTokenTTL  = 24 * time.Hour
-	refreshTokenTTL = 7 * 24 * time.Hour
+	refreshTokenTTL = 30 * 24 * time.Hour
 )
 
 func HashPassword(password string) (string, error) {
