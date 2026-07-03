@@ -212,20 +212,66 @@ func (h *AdminHandler) GetAllArticles(w http.ResponseWriter, r *http.Request) {
 		limit = 10
 	}
 	search := r.URL.Query().Get("search")
+	status := r.URL.Query().Get("status")
+	categoryId := r.URL.Query().Get("categoryId")
+	sortBy := r.URL.Query().Get("sortBy")
+	sortOrder := r.URL.Query().Get("sortOrder")
 	offset := (page - 1) * limit
 
 	countQuery := h.DB.Model(&models.Article{}).Unscoped()
+	findQuery := h.DB.Model(&models.Article{}).Unscoped()
+
+	// Apply search filter
 	if search != "" {
-		countQuery = countQuery.Where("title ILIKE ?", "%"+search+"%")
+		like := "%" + search + "%"
+		countQuery = countQuery.Where("title ILIKE ?", like)
+		findQuery = findQuery.Where("title ILIKE ?", like)
+	}
+
+	// Apply status filter
+	if status == "DELETED" {
+		countQuery = countQuery.Where("\"deletedAt\" IS NOT NULL")
+		findQuery = findQuery.Where("\"deletedAt\" IS NOT NULL")
+	} else if status != "" && status != "ALL" {
+		countQuery = countQuery.Where("status = ? AND \"deletedAt\" IS NULL", status)
+		findQuery = findQuery.Where("status = ? AND \"deletedAt\" IS NULL", status)
+	} else {
+		// By default (All / empty status), exclude deleted articles
+		countQuery = countQuery.Where("\"deletedAt\" IS NULL")
+		findQuery = findQuery.Where("\"deletedAt\" IS NULL")
+	}
+
+	// Apply category filter
+	if categoryId != "" && categoryId != "ALL" {
+		countQuery = countQuery.Where("\"categoryId\" = ?", categoryId)
+		findQuery = findQuery.Where("\"categoryId\" = ?", categoryId)
+	}
+
+	// Apply sorting
+	orderClause := "\"createdAt\" DESC"
+	if sortBy != "" {
+		field := ""
+		switch sortBy {
+		case "createdAt":
+			field = "\"createdAt\""
+		case "updatedAt":
+			field = "\"updatedAt\""
+		case "title":
+			field = "title"
+		case "status":
+			field = "status"
+		}
+		if field != "" {
+			direction := "DESC"
+			if sortOrder == "asc" || sortOrder == "ASC" {
+				direction = "ASC"
+			}
+			orderClause = fmt.Sprintf("%s %s", field, direction)
+		}
 	}
 
 	var total int64
 	countQuery.Count(&total)
-
-	findQuery := h.DB.Model(&models.Article{}).Unscoped()
-	if search != "" {
-		findQuery = findQuery.Where("title ILIKE ?", "%"+search+"%")
-	}
 
 	var articles []models.Article
 	findQuery.Select("id", "title", "slug", "\"coverImage\"", "status", "\"authorId\"", "\"categoryId\"", "\"createdAt\"", "\"updatedAt\"", "\"publishedAt\"", "\"deletedAt\"").
@@ -235,7 +281,7 @@ func (h *AdminHandler) GetAllArticles(w http.ResponseWriter, r *http.Request) {
 		Preload("Category", func(db *gorm.DB) *gorm.DB {
 			return db.Select("id", "name", "slug")
 		}).
-		Offset(offset).Limit(limit).Order("\"createdAt\" DESC").
+		Offset(offset).Limit(limit).Order(orderClause).
 		Find(&articles)
 	if len(articles) == 0 {
 		articles = []models.Article{}
